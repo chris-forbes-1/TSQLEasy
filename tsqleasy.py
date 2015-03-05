@@ -17,6 +17,8 @@ if pythonver >= 3:
 else:
     import sqlodbccon
 
+useCon = False
+
 # TODO: Get procedures (functions) list (with params)
 # TODO: Completions to TSQL operators
 # TODO: Processes, locks, etc..
@@ -25,8 +27,9 @@ else:
 class SQLAlias():
     aliases = {}
     text_hash = ''
-
+    
     def __init__(self):
+        useCon = False
         pass
 
     def set_alias(self, alias, name):
@@ -87,6 +90,8 @@ def te_get_connection():
         autocommit = server_list[server_active]['autocommit'] if 'autocommit' in server_list[server_active] else True
         timeout = server_list[server_active]['timeout'] if 'timeout' in server_list[server_active] else 0
         enable_con = server_list[server_active]['enable_connection'] if 'enable_connection' in server_list[server_active] else False
+        global useCon 
+        useCon = enable_con
         if enable_con:
             sqlcon = sqlodbccon.SQLCon(server=server, driver=driver, serverport=server_port, username=username, password=password, database=database, sleepsecs="5", autocommit=autocommit, timeout=timeout)
         return sqlcon
@@ -189,28 +194,29 @@ def te_get_columns(position=None):
     if al:
         # print('%s is a alias of %s' % (table_name.lower(), al))
         table_name = al
-
-    sqlcon = te_get_connection()
-    if sqlcon is not None:
-        sqlcon.dbexec(sqlreq_columns, [table_name])
-        if sqlcon.sqldataset:
-            for row in sqlcon.sqldataset:
-                column = row.name
-                if column:
-                    columns.append(('%s\tTable column' % column, column))
-        sqlcon.dbdisconnect()
+    if useCon:
+        sqlcon = te_get_connection()
+        if sqlcon is not None:
+            sqlcon.dbexec(sqlreq_columns, [table_name])
+            if sqlcon.sqldataset:
+                for row in sqlcon.sqldataset:
+                    column = row.name
+                    if column:
+                        columns.append(('%s\tTable column' % column, column))
+            sqlcon.dbdisconnect()
     return columns
 
 
 def te_get_tables():
     tables = []
-    sqlcon = te_get_connection()
-    if sqlcon is not None:
-        sqlcon.dbexec(sqlreq_tables)
-        if sqlcon.sqldataset:
-            for row in sqlcon.sqldataset:
-                tables.append(('%s\tSQL table' % row.name, row.name))
-        sqlcon.dbdisconnect()
+    if useCon:
+        sqlcon = te_get_connection()
+        if sqlcon is not None:
+            sqlcon.dbexec(sqlreq_tables)
+            if sqlcon.sqldataset:
+                for row in sqlcon.sqldataset:
+                    tables.append(('%s\tSQL table' % row.name, row.name))
+            sqlcon.dbdisconnect()
     return tables
 
 
