@@ -4,11 +4,12 @@
         "Main": {
             "driver": "SQL Server",
             "server": "127.0.0.1",
-            "server_port": "1433",
+            "server_port": "1521",
             "username": "",
             "password": "",
             "database": "",
-            "autocommit": true
+            "autocommit": false,
+            "enable_connection": false
             },
         "Offline": {
             "driver": ""
